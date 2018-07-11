@@ -98,3 +98,44 @@ print("Restart Apache")
 
 os.system('sudo systemctl restart apache2')
 
+#Virtual Hosts
+#Create a copy of the default Apache configuration file for your site
+
+print("Create a copy of the default Apache configuration file for your site")
+
+shutil.copy2('/etc/apache2/sites-available/000-default.conf', '/etc/apache2/sites-available/example.com.conf')
+
+
+f = open("/etc/apache2/sites-available/example.com.conf", 'w')
+
+f.writelines(['<Directory /var/www/html/example.com/public_html>\n', 
+'        Require all granted\n', 
+'</Directory>\n', '<VirtualHost *:80>\n', 
+'        ServerName example.com\n', 
+'        ServerAlias www.example.com\n', 
+'        ServerAdmin webmaster@localhost\n', 
+'        DocumentRoot /var/www/html/example.com/public_html\n', '\n',
+'        ErrorLog /var/www/html/example.com/logs/error.log\n',
+'        CustomLog /var/www/html/example.com/logs/access.log combined\n', 
+'\n','</VirtualHost>'])
+
+f.close()
+ 
+ 
+#Create a public_html and a log directory
+
+print("Create a public_html and a log directory")
+ 
+
+if not os.path.exists("/var/www/html/example.com/public_html"):
+    os.makedirs("/var/www/html/example.com/public_html")
+    
+if not os.path.exists("/var/www/html/example.com/log"):
+    os.makedirs("/var/www/html/example.com/log")
+   
+#Reload configuration
+
+print("Reload configuration")
+os.system('a2ensite example.com')
+os.system('a2dissite 000-default.conf')
+os.system('systemctl reload apache2')
