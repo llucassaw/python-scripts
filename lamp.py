@@ -139,3 +139,18 @@ print("Reload configuration")
 os.system('a2ensite example.com')
 os.system('a2dissite 000-default.conf')
 os.system('systemctl reload apache2')
+
+#Connect to the mysql shell, with unix_socket defined  (https://stackoverflow.com/questions/6885164/pymysql-cant-connect-to-mysql-on-localhost), otherwise we will get "Access denied for user 'root'@'localhost'" error
+
+cnx = mysql.connector.connect(unix_socket='/var/run/mysqld/mysqld.sock', user='root')
+cursor=cnx.cursor()
+#Sql for creating "webdata" database
+database = "CREATE DATABASE IF NOT EXISTS webdata"
+#Sql for creating user "webuser" and password
+user = "GRANT ALL ON webdata.* TO 'webuser' IDENTIFIED BY 'password'"
+cursor.execute(database)
+#The result of  cursor.execute(database) command (useful for debugging)
+print(cursor.statement)
+cursor.execute(user)
+print(cursor.statement)
+cnx.close(
