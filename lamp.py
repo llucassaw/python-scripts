@@ -2,35 +2,28 @@
 #coding=utf-8
 
 import os
+import shutil
+import configparser
+import mysql.connector
 
-#updating
+#update
 
-def update_function():
-
-    print ("Checking updates")
-    os.system('sudo apt update')
-
-update_function()
+print ("Checking updates")
+os.system('apt update')
 
 #upgrade
 
-def upgrade_function():
+print ("Installing updates")
+os.system('apt upgrade -y')
 
-    print ("Installing updates")
-    os.system('sudo apt upgrade -y')
+#install packages
 
-upgrade_function()
+print ("Installing packages")
+os.system('apt install apache2 mysql-server php7.2 libapache2-mod-php7.2 php-mysql python3-mysql.connector -y')
+    
 
-#installing packages
+#configure apache2
 
-def install_function():
-
-    print ("Installing packages")
-    os.system('sudo apt install apache2 mysql-server php7.2 libapache2-mod-php7.2 php-mysql -y')
-
-install_function()
-
-#configuring apache2
 print ("configuring apache")
 
 f = open('/etc/apache2/apache2.conf','r')
@@ -89,14 +82,15 @@ os.rename('/etc/apache2/mods-available/~mpm_prefork.conf', '/etc/apache2/mods-av
 # Disable the event module and enable prefork
 print("Disable the event module and enable prefork")
 
-os.system('sudo a2dismod mpm_event')
-os.system('sudo a2enmod mpm_prefork')
+os.system('a2dismod mpm_event')
+os.system('a2enmod mpm_prefork')
 
 #Restart Apache
 
 print("Restart Apache")
 
-os.system('sudo systemctl restart apache2')
+os.system('systemctl restart apache2')
+
 
 #Virtual Hosts
 #Create a copy of the default Apache configuration file for your site
@@ -129,28 +123,69 @@ print("Create a public_html and a log directory")
 
 if not os.path.exists("/var/www/html/example.com/public_html"):
     os.makedirs("/var/www/html/example.com/public_html")
+os.system('chown www-data /var/www/html/example.com/public_html')
     
-if not os.path.exists("/var/www/html/example.com/log"):
-    os.makedirs("/var/www/html/example.com/log")
-   
+if not os.path.exists("/var/www/html/example.com/logs"):
+    os.makedirs("/var/www/html/example.com/logs")
+os.system('chown www-data /var/www/html/example.com/logs')
 #Reload configuration
 
 print("Reload configuration")
+os.system('systemctl reload apache2')
 os.system('a2ensite example.com')
 os.system('a2dissite 000-default.conf')
 os.system('systemctl reload apache2')
 
-#Connect to the mysql shell, with unix_socket defined  (https://stackoverflow.com/questions/6885164/pymysql-cant-connect-to-mysql-on-localhost), otherwise we will get "Access denied for user 'root'@'localhost'" error
 
+
+#Connect to the mysql shell, with unix_socket defined  (https://stackoverflow.com/questions/6885164/pymysql-cant-connect-to-mysql-on-localhost), otherwise we will get "Access denied for user 'root'@'localhost'" error
+print("Configure mysql")
 cnx = mysql.connector.connect(unix_socket='/var/run/mysqld/mysqld.sock', user='root')
 cursor=cnx.cursor()
 #Sql for creating "webdata" database
 database = "CREATE DATABASE IF NOT EXISTS webdata"
 #Sql for creating user "webuser" and password
 user = "GRANT ALL ON webdata.* TO 'webuser' IDENTIFIED BY 'password'"
+#Automating mysql_secure_installation
+disable_remote_root ="DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')"
+remove_ano_users = "DELETE FROM mysql.user WHERE User=''"
+remove_test = "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%'"
+reload_privilages = "FLUSH PRIVILEGES"
 cursor.execute(database)
 #The result of  cursor.execute(database) command (useful for debugging)
 print(cursor.statement)
 cursor.execute(user)
 print(cursor.statement)
-cnx.close(
+cursor.execute(disable_remote_root)
+print(cursor.statement)
+cursor.execute(remove_ano_users)
+print(cursor.statement)
+cursor.execute(remove_test)
+print(cursor.statement)
+cursor.execute(reload_privilages)
+print(cursor.statement)
+cnx.close()
+
+
+#Edit /etc/php/7.2/apache2/php.ini
+
+print("Edit /etc/php/7.2/apache2/php.ini")
+config = configparser.ConfigParser()
+config.read('/etc/php/7.2/apache2/php.ini')
+config.set('PHP','error_reporting','E_COMPILE_ERROR | E_RECOVERABLE_ERROR | E_ERROR | E_CORE_ERROR')
+config.set('PHP','max_input_time','30')
+config.set('PHP','error_log', '/var/log/php/error.log')
+#All comments will be removed from the /etc/php/7.2/apache2/php.ini file
+configfile = open('/etc/php/7.2/apache2/php.ini', 'w')
+config.write(configfile)
+configfile.close()
+# as an alternative you can use
+#with open('/etc/php/7.2/apache2/php.ini', 'w') as configfile:
+#        config.write(configfile)
+
+if not os.path.exists('/var/log/php'):
+    os.system('mkdir /var/log/php')
+os.system('chown www-data /var/log/php')
+os.system('systemctl restart apache2')
+
+print("Configuration of the lamp stack completed")
