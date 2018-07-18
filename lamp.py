@@ -212,9 +212,3 @@ t.close()
 
 os.system('su - luc -c "xdg-open http://localhost/phptest.php" && rm /var/www/html/example.com/public_html/phptest.php')
 '''
-
-
- 
- 
- 
- 
