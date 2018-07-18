@@ -56,29 +56,29 @@ f.close()
  
 os.rename('/etc/apache2/mods-available/~mpm_prefork.conf', '/etc/apache2/mods-available/mpm_prefork.conf')
  
- #Alternative method with lists
- 
-# f = open("/etc/apache2/mods-available/mpm_prefork.conf", 'r')
-#f1 = open("/etc/apache2/mods-available/~mpm_prefork.conf", 'w')
+#Alternative method with lists
+'''
+f = open("/etc/apache2/mods-available/mpm_prefork.conf", 'r')
+f1 = open("/etc/apache2/mods-available/~mpm_prefork.conf", 'w')
 
-#filetext = f.readlines()
-#filetext.remove('\tStartServers\t\t\t 5\n')
-#filetext.insert(8,'\tStartServers\t\t\t 4\n')
-#filetext.remove('\tMinSpareServers\t\t  5\n')
-#filetext.insert(9,'\tMinSpareServers\t\t  3\n')
-#filetext.remove('\tMaxSpareServers\t\t 10\n')
-#filetext.insert(10,'\tMaxSpareServers\t\t 40\n')
-#filetext.remove('\tMaxRequestWorkers\t  150\n',)
-#filetext.insert(11,'\tMaxRequestWorkers\t  200\n',)
-#filetext.remove('\tMaxConnectionsPerChild   0\n')
-#filetext.insert(12,'\tMaxConnectionsPerChild  10000\n')
+filetext = f.readlines()
+filetext.remove('\tStartServers\t\t\t 5\n')
+filetext.insert(8,'\tStartServers\t\t\t 4\n')
+filetext.remove('\tMinSpareServers\t\t  5\n')
+filetext.insert(9,'\tMinSpareServers\t\t  3\n')
+filetext.remove('\tMaxSpareServers\t\t 10\n')
+filetext.insert(10,'\tMaxSpareServers\t\t 40\n')
+filetext.remove('\tMaxRequestWorkers\t  150\n',)
+filetext.insert(11,'\tMaxRequestWorkers\t  200\n',)
+filetext.remove('\tMaxConnectionsPerChild   0\n')
+filetext.insert(12,'\tMaxConnectionsPerChild  10000\n')
 
-#f1.writelines(filetext)
-#f.close()
-#f1.close()
+f1.writelines(filetext)
+f.close()
+f1.close()
 
-#os.rename('/etc/apache2/mods-available/~mpm_prefork.conf', '/etc/apache2/mods-available/mpm_prefork.conf')
-
+os.rename('/etc/apache2/mods-available/~mpm_prefork.conf', '/etc/apache2/mods-available/mpm_prefork.conf')
+'''
 # Disable the event module and enable prefork
 print("Disable the event module and enable prefork")
 
@@ -189,3 +189,32 @@ os.system('chown www-data /var/log/php')
 os.system('systemctl restart apache2')
 
 print("Configuration of the lamp stack completed")
+
+#Optionally test our lamp stack
+
+'''
+print("Optionally test our lamp stack")
+
+t = open("/var/www/html/example.com/public_html/phptest.php", 'w')
+
+t.writelines(['<html>\n', 
+'<head>\n', 
+'    <title>PHP Test</title>\n', '</head>\n', '    <body>\n',
+"    <?php echo '<p>Hello World</p>';\n", '\n',
+'    // In the variables section below, replace user and password with your own MySQL credentials as created on your server\n', 
+'    $servername = "localhost";\n', '    $username = "webuser";\n', '    $password = "password";\n', '\n',
+'    // Create MySQL connection\n', '    $conn = mysqli_connect($servername, $username, $password);\n', '\n', 
+'    // Check connection - if it fails, output will include the error message\n','    if (!$conn) {\n', 
+"        die('<p>Connection failed: <p>' . mysqli_connect_error());\n", '    }\n', 
+"    echo '<p>Connected successfully</p>';\n", '    ?>\n', '</body>\n', '</html>\n'])
+
+t.close()
+
+os.system('su - luc -c "xdg-open http://localhost/phptest.php" && rm /var/www/html/example.com/public_html/phptest.php')
+'''
+
+
+ 
+ 
+ 
+ 
